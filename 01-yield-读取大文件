@@ -1,0 +1,19 @@
+#用于读取500G这样大文件，每个拿4096或者可以4096*10
+def myreadfile(f,newline):
+    buf=""
+    while True:
+        while newline in buf:
+            print("buf",buf)
+            pos = buf.index(newline)
+            yield buf[:pos]
+            buf = buf[pos+len(newline):]
+        chunck = f.read(4096)
+        if not chunck:
+            yield buf
+            break
+        buf += chunck
+
+with open("input.txt") as f:
+    for line in myreadfile(f,"{|}"):
+        print("line",line)
+
