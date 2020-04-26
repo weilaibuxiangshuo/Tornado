@@ -1,0 +1,41 @@
+server.py
+
+import socket,threading
+
+server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server.bind(("0.0.0.0",8000))
+server.listen()
+
+def resolve(sock,addr):
+    while True:
+        d = sock.recv(1024)
+        if d.decode("utf8")=="exit":
+            break
+        else:
+            print("客户端信息：{}".format(d.decode("utf8")))
+            message = input()
+            sock.send("{}".format(message).encode("utf8"))
+    sock.send("exit".encode("utf8"))
+    sock.close()
+
+    sock, addr = server.accept()
+    threading.Thread(target=resolve,args=(sock,addr)).start()
+    # server.close()
+    # sock.close()
+
+
+client.py
+
+import socket
+
+client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+
+client.connect(("127.0.0.1",8000))
+while 1:
+    data = input()
+    client.send("{}".format(data).encode("utf8"))
+    data = client.recv(1024)
+    if data.decode("utf8")=="exit":
+        break
+    print("服务端返回的信息{}".format(data.decode("utf8")))
+client.close()
