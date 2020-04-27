@@ -1,0 +1,22 @@
+# -*- coding:utf-8 -*-
+import time
+
+import asyncio
+import aiodns,aiohttp
+
+
+loop = asyncio.get_event_loop()
+resolver = aiodns.DNSResolver(loop=loop)
+
+async def query(name,query_type):
+    # await resolver.query(name,query_type)
+    # await asyncio.sleep
+    aa = await resolver.query(name,query_type)
+    print(aa)
+    return aa
+
+coro = query("www.baidu.com","CNAME")
+task = asyncio.ensure_future(coro)
+result = loop.run_until_complete(task)
+print(result.cname)
+print(type(result.__dir__))
