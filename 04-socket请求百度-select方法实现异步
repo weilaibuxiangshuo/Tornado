@@ -1,0 +1,68 @@
+# -*- coding:utf-8 -*-
+import socket
+from urllib.parse import urlparse
+from selectors import DefaultSelector,EVENT_READ,EVENT_WRITE
+
+#使用select完成http请求
+selector = DefaultSelector()
+urls = ["http://www.baidu.com"]
+stop = False
+
+
+class Fetcher:
+    def connected(self,key):
+        selector.unregister(key.fd)
+        self.client.send("GET {} HTTP/1.1\r\nHost:{}\r\nConnection:close\r\n\r\n".format(self.path, self.host).encode("utf8"))
+        selector.register(self.client.fileno(),EVENT_READ,self.readdle)
+
+    def readdle(self,key):
+        d = self.client.recv(1024)
+        if d:
+            self.data += d
+        else:
+            selector.unregister(key.fd)
+            self.data = self.data.decode("utf8")
+            html_data = self.data.split("\r\n\r\n")[1]
+            print(html_data)
+            self.client.close()
+            urls.remove(self.base_url)
+            if not urls:
+                global stop
+                stop = True
+
+    def get_url(self,url):
+        self.base_url = url
+        nn = urlparse(url)
+        self.data = b''
+        self.path = nn.path
+        self.host = nn.netloc
+        if self.path == "":
+            self.path = "/"
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client.setblocking(False)
+
+        try:
+            self.client.connect((self.host, 80))
+        except BlockingIOError as e:
+            pass
+
+
+        #注册
+        selector.register(self.client.fileno(),EVENT_WRITE,self.connected)
+
+
+def loop():
+    #事件循环，不停调用socket的状态并调用对应的回调函数
+    #select本不支持register模式，selector封装才可以register
+    # socket状态变化以后的回调都是由程序员完成
+    while not stop:
+        ready = selector.select()
+        for key, mask in ready:
+            call_back = key.data
+            call_back(key)
+    #回调+事件循环+select(poll/epoll)
+
+if __name__=="__main__":
+    fetcher = Fetcher()
+    fetcher.get_url("http://www.baidu.com")
+    loop()
