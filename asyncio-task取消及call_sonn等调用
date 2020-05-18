@@ -1,0 +1,103 @@
+第一：task取消
+
+import asyncio,time
+
+
+async def get_html(url):
+    print("start get url")
+    await asyncio.sleep(2)
+    print("end get url")
+
+if __name__=="__main__":
+    startTime = time.time()
+    loop = asyncio.get_event_loop()
+    tasks = [get_html("http://www.baidu.com") for i in range(10)]
+    try:
+        loop.run_until_complete(asyncio.wait(tasks))
+    except KeyboardInterrupt as e:
+        all_task = asyncio.Task.all_tasks()
+        for task in all_task:
+            task.cancel()
+            print("999999")
+        loop.stop()
+        #stop之后必须再执行run_forever不要让循环停止否则会报错
+        loop.run_forever()
+    finally:
+        loop.close()
+    print(time.time()-startTime)
+    
+    
+第二：call_soon,call_at,call_later,call_soonsafed
+# -*- coding:utf-8 -*-
+import asyncio
+
+def callback(times):
+    print("sleep {} sucess".format(times))
+
+def stoploop(loop):
+    loop.stop()
+
+if __name__=="__main__":
+    loop = asyncio.get_event_loop()
+    # #call_soon立即执行,loop.call_soon_threadsafe()主要解决多个程序访问同一个变量
+    # loop.call_soon(callback,3)
+    # #可以停止
+    # loop.call_soon(stoploop,loop)
+    #call_later可以指定多少后执行，根据延时先后执行，
+    #call_soon比call_later先执行
+    # loop.call_later(2,callback,5)
+    # loop.call_later(1,callback,5)
+    #因为不是协程所以使用run_forever
+    # now = loop.time()
+    #跟call_later相似
+    # loop.call_at(now+2,callback,3)
+    # loop.call_at(now+2,callback,3,loop)
+
+    loop.run_forever()
+    
+    
+第三：协程与yield的兼容处理
+# -*- coding:utf-8 -*-
+
+import types
+
+@types.coroutine
+def average():
+    total = 0.0  # 数字的总和
+    count = 0  # 数字的个数
+    avg = None  # 平均值
+    while True:
+        num = yield avg
+        print("num",num)
+        if not num:
+            break
+        total += num
+        count += 1
+        avg = total / count
+    return "kk"
+
+
+async def wrap_average(average):
+    res = await average
+    print("res", res)
+    if res:
+        yield None
+
+
+# 定义一个函数，通过这个函数向average函数发送数值
+def main(wrap):
+    # wrap = wrap_average()
+    print(wrap.send(None))  # 启动生成器
+    print(wrap.send(10))  # 10
+    print(wrap.send(20))  # 15
+    print(wrap.send(30))  # 20
+    print(wrap.send(40))  # 25
+    print(wrap.send(None))
+
+
+
+# main()
+
+g = average()
+wrap = wrap_average(g)
+main(wrap)
