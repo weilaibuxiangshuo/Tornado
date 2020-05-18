@@ -1,0 +1,51 @@
+import asyncio,time
+
+
+# async def get_html(url):
+#     print("start get url")
+#     await asyncio.sleep(2)
+#     print("end get url")
+#
+# if __name__=="__main__":
+#     startTime = time.time()
+#     loop = asyncio.get_event_loop()
+#     tasks = [get_html("http://www.baidu.com") for i in range(10)]
+#     loop.run_until_complete(asyncio.wait(tasks))
+#     print(time.time()-startTime)
+
+
+# async def get_html(url):
+#     print("start get url")
+#     await asyncio.sleep(2)
+#     print("end get url")
+#     return "boddy"
+#
+# def callback(url,future):
+#     print("回调进来的网址{}".format(url))
+#
+# if __name__=="__main__":
+#     startTime = time.time()
+#     loop = asyncio.get_event_loop()
+#     # get_future=asyncio.ensure_future(get_html("http://www.baidu.com"))
+#     # print(type(get_future),get_future)
+#     task = loop.create_task(get_html("http://www.baidu.com"))
+#     from functools import partial
+#     task.add_done_callback(partial(callback,"http://www.qq.com"))
+#     loop.run_until_complete(task)
+#     print(task.result(),time.time()-startTime)
+
+
+
+async def get_html(url):
+    print("start get url")
+    await asyncio.sleep(2)
+    print("end get url")
+
+if __name__=="__main__":
+    startTime = time.time()
+    loop = asyncio.get_event_loop()
+    tasks = [get_html("http://www.baidu.com") for i in range(10)]
+    #gather接收任意单个，组成元组，tasks接收列表，可以看他们的原代码
+    # loop.run_until_complete(asyncio.gather(*tasks))
+    loop.run_until_complete(asyncio.wait(tasks))
+    print(time.time()-startTime)
