@@ -101,3 +101,22 @@ def main(wrap):
 g = average()
 wrap = wrap_average(g)
 main(wrap)
+
+第四：协程嵌套
+
+# -*- coding:utf-8 -*-
+import asyncio
+
+async def a(x,y):
+    return x+y
+
+async def b():
+    x =1
+    y = 3
+    result = await a(x,y)
+    print("结果：",result)
+
+
+if __name__=="__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(b())
