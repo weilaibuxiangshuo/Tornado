@@ -1,0 +1,70 @@
+第一：
+run_until_complete调用的协程，任务，future,会await等待调用的程序结束，再返回，
+如果是run_until_complete调用的协程，任务，future,里面的程序再调用别的协程，任务，future，这个时候run_until_complete是直接返回，不会等待
+如下：run_until_complete调用main()协程，会等待main()中sleep 3秒后结束，其它get_url,edit_html，都会到await切出去后直接返回不阻塞等待
+因为，get_url和edit_html睡眠5秒后唤醒程序早已在main()睡眠3秒后运行结束了，
+如果要让get_url和edit_html都等待返回，需要在get_url中 task=asyncio.ensure_future(get_url()),await task才可以，因为asyncio.ensure_future是立即执行的
+
+import asyncio
+
+async def get_url():
+    print("get_url开始")
+    await asyncio.sleep(5)
+    print("get_url结束")
+
+async def edit_html():
+    print("edit_html开始")
+    asyncio.ensure_future(get_url())
+    await asyncio.sleep(5)
+    print("edit_html结束")
+
+async def main():
+    asyncio.ensure_future(edit_html())
+    print("主程序开始")
+    await asyncio.sleep(3)
+    print("主程序结束")
+
+
+if __name__=="__main__":
+    loop = asyncio.get_event_loop()
+    # asyncio.ensure_future(main())
+    # loop.run_forever()
+    loop.run_until_complete(main())
+
+结果：
+主程序开始
+edit_html开始
+get_url开始
+主程序结束
+
+第二方式：就是loop一直运行，那这样不管sleep多久，唤醒的时候，因为loop一直都在运行，就可以唤醒成功，因为run_forever不会创建task所以，要手动创建，
+而run_until_complete不需要，他会自动封装为task
+
+import asyncio
+
+async def get_url():
+    print("get_url开始")
+    await asyncio.sleep(5)
+    print("get_url结束")
+
+async def edit_html():
+    print("edit_html开始")
+    asyncio.ensure_future(get_url())
+    await asyncio.sleep(5)
+    print("edit_html结束")
+
+async def main():
+    asyncio.ensure_future(edit_html())
+    print("主程序开始")
+    await asyncio.sleep(3)
+    print("主程序结束")
+
+
+if __name__=="__main__":
+    loop = asyncio.get_event_loop()
+    asyncio.ensure_future(main())
+    loop.run_forever()
+    # loop.run_until_complete(main())
+
+
+
