@@ -67,8 +67,18 @@ class MainHandler(RequestHandler):
         # self.write("hello")  #这个是长连接，可以写多个write会统一写入缓存区，再一起渲染到页面
         # self.finish("hello")  #这个是短连接，连接后就关闭,如果参数为dict会自动转为json返回
         self.finish({'code':200})
+        #设定跳转
+        # self.redirect()
         pass
     def delete(self,*args,**kwargs):
         pass
     def patch(self,*args,**kwargs):
         pass
+
+    #可以设定错误显示的页面，例如 ：500，400，403
+    def write_error(self, status_code, **kwargs):
+        pass
+
+
+    #输出
+    # set_status write finish redirect write_error
