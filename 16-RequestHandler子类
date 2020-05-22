@@ -1,0 +1,44 @@
+# -*- coding:utf-8 -*-
+from tornado.web import StaticFileHandler,RedirectHandler
+
+#RedirectHandler
+# 另一个是self.redirect("",permanent=True)#true代表 301 ，false代表302
+#301,永久，302,临时重定向
+
+#StaticFileHandler
+#配置静态文件
+
+
+from tornado import web
+import tornado,time
+from tornado.options import define,options,parse_command_line
+
+
+
+class MainHandler(web.RequestHandler):
+    async def get(self,*args,**kwargs):
+        self.write("hello world2")
+
+# class PeopleHandler(web.RequestHandler):
+#     async def get(self,id,*args,**kwargs):
+#         self.write("id:{}".format(id))
+
+settings={
+    "static_path":"D:/mmm/newtornado/tornado1/static",
+    "static_url_prefix":"/static2/",#设定静态文件的前缀以什么开头，设定后必须以个开头才能访问
+}
+
+
+urls = [
+    tornado.web.URLSpec("/?", MainHandler, name="index"),
+    tornado.web.URLSpec("/2/?", RedirectHandler, {"url":"/"}),
+    #如果配置了下面的StaticFileHandler,上面settings里面的两个配置就不需要了
+    # tornado.web.URLSpec("/static3/(.*)/?", StaticFileHandler, {"path":"D:/mmm/newtornado/tornado1/static"}),
+    ]
+
+if __name__=="__main__":
+    #debug=True开启热更新
+    app = web.Application(urls,**settings)
+    app.listen(8009)
+    ioloop = tornado.ioloop.IOLoop.current()
+    ioloop.start()
