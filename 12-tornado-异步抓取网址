@@ -1,0 +1,57 @@
+# -*- coding:utf-8 -*-
+from urllib.parse import urljoin
+from bs4 import BeautifulSoup
+from tornado import gen,httpclient,ioloop,queues
+import asyncio
+base_url = "http://www.tornadoweb.org/en/stable"
+concurrentcy = 3
+
+async def get_url_links(url):
+    response = await httpclient.AsyncHTTPClient().fetch(url)
+    html = response.body.decode("utf8")
+    soup = BeautifulSoup(html,features='lxml')
+    # print(soup)
+    links = [urljoin(base_url,a.get("href")) for a in soup.find_all("a",href=True)]
+    return links
+
+async def main():
+    q = queues.Queue()
+    seen_set = set()
+
+
+    async def fetch_url(current_url):
+        if current_url in seen_set:
+            return
+        print("获取{}".format(current_url))
+        seen_set.add(current_url)
+        next_urls = await get_url_links(current_url)
+        for new_url in next_urls:
+            if new_url.startswith(base_url):
+                #放入队列
+                # print(new_url)
+                await q.put(new_url)
+
+    async def consumer():
+        async for url in q:
+            if url is None:
+                return
+            try:
+                await fetch_url(url)
+            except Exception as e:
+                print("error")
+            finally:
+                q.task_done()
+
+    #放入初始url到队列
+    await q.put(base_url)
+    #并发启动3协程
+    workers = gen.multi([consumer() for _ in range(concurrentcy)])
+    await q.join()
+    for _ in range(concurrentcy):
+        await q.put(None)
+
+    await workers
+
+
+if __name__=="__main__":
+    io_loop = ioloop.IOLoop.current().run_sync(main)
