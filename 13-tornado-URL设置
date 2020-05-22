@@ -1,0 +1,55 @@
+# -*- coding:utf-8 -*-
+from tornado import web
+import tornado,time
+
+class MainHandler(web.RequestHandler):
+    async def get(self,*args,**kwargs):
+        #在tornado中尽量不要写同步阻塞代码，否则下一个请求需要等待上一个请求10秒后才能显示
+        # time.sleep(10)
+        self.write("hello world2")
+
+# class PeopleHandler(web.RequestHandler):
+#     async def get(self,id,*args,**kwargs):
+#         self.write("id:{}".format(id))
+
+class PeopleHandler(web.RequestHandler):
+    #initialize不能定义协程，因为系统不是用协程方式调用
+    def initialize(self,name):
+        print(name)
+    async def get(self,id,*args,**kwargs):
+        self.write("id:{}".format(id))
+        #可以跳转到指定名称的路由
+        # self.redirect(self.reverse_url("username","uuuu"))
+
+class PeopleNameHandler(web.RequestHandler):
+    async def get(self,name,*args,**kwargs):
+        self.write("name:{}".format(name))
+
+class PeopleInfoHandler(web.RequestHandler):
+    async def get(self,name,age,gender,*args,**kwargs):
+        self.write("用户:{},年龄：{},性别：{}".format(name,age,gender))
+
+user_id = {
+    "name":"user"
+}
+
+#配置url变量，最后添加?会自动在url最后添加/
+urls = [
+    tornado.web.URLSpec("/?",MainHandler,name="index"),
+    # tornado.web.URLSpec("/people/(\d+)/?",PeopleHandler,name="userid"), #/people/1/
+    #可以给路由传初始化参数,Handler通过initializer获取
+    tornado.web.URLSpec("/people/(\d+)/?",PeopleHandler,user_id,name="userid"), #/people/1/
+    tornado.web.URLSpec("/people/(\w+)/?",PeopleNameHandler,name="username"),  #/people/boddy/
+    # tornado.web.URLSpec("/people/(\w+)/(\d+)/(\w+)/?",PeopleInfoHandler,name="userinfo"),  #/people/boddy/age/gender
+    # 可以定义一个参数传递名称，如果定义Handler接收参数必须与定义的名称一致，否则报错
+    tornado.web.URLSpec("/people/(?P<name>\w+)/(?P<age>\d+)/(?P<gender>\w+)/?",PeopleInfoHandler,name="userinfo"),  #/people/boddy/age/gender
+    ]
+
+if __name__=="__main__":
+    #debug=True开启热更新
+    app = web.Application(urls,debug=False)
+    app.listen(8888)
+    ioloop = tornado.ioloop.IOLoop.current()
+    ioloop.start()
+
+
