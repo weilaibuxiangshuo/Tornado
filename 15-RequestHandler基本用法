@@ -1,0 +1,74 @@
+# -*- coding:utf-8 -*-
+from tornado.web import RequestHandler
+
+class MainHandler(RequestHandler):
+    #入口
+    def initialize(self):
+        #用于初始化handler类的过程
+        self.name = "9999"
+
+    def prepare(self):
+        #用于真正调用请求处理之前的初始化方法
+        #1.打印日志 2.打开文件 等
+        pass
+
+
+    def on_finish(self):
+        #关闭句柄，清理内存里调用
+        pass
+
+    #http方法s
+    def get(self,*args,**kwargs):
+        #接收参数得到是一个字符串(适应于get)
+        data1 = self.get_query_argument("name")
+        #接收参数得到是一个字符串列表(适应于get)
+        data2 = self.get_query_arguments("name")
+        data3 = self.get_arguments("name")
+        pass
+    def post(self,*args,**kwargs):
+        #获取所有传递过来的参数与值
+        data=self.request.arguments
+        # get_argument会取get_arguments中最后的值
+        data1 = self.get_argument("name")
+        #get_arguments会把post中网址？后面同名以及post中data里的同名一起取出来
+        data2 = self.get_arguments("name")
+        #在post使用get_query_argument只会取网址?后面的参数，如果没有会报400错误
+        data3 = self.get_query_argument("name")
+
+        #如果传递过来是json，上面那些方法是取不到的，需要使用下面方式
+        #tornado对于json并没有放在argument里面，所以需要如下处理(两种方式)
+        import json
+        #json第一种方式：
+        # import requests
+        # requests.post("http://127.0.0.1:8009/?name=boddy3", json={
+        #     "name": "boddy1",
+        #     "age": "99"
+        # })
+        #如何拿如下：
+        # params = self.request.body.decode("utf8")
+        # data5 = json.loads(params)
+
+        # json第二种方式：
+        # import requests
+        # headers = {
+        #     "Content-Type": "application/x-www-form-urlencoded;"
+        # }
+        # requests.post("http://127.0.0.1:8009/?name=boddy3", headers=headers, data={
+        #     "name": "boddy1",
+        #     "age": "99"
+        # })
+        # try:
+            # data5 = self.get_body_argument("name")
+            # data7 = self.get_body_arguments("name")
+        # except Exception as e:
+        #     #可以设置返回的状态码
+        #     self.set_status(500)
+
+        # self.write("hello")  #这个是长连接，可以写多个write会统一写入缓存区，再一起渲染到页面
+        # self.finish("hello")  #这个是短连接，连接后就关闭,如果参数为dict会自动转为json返回
+        self.finish({'code':200})
+        pass
+    def delete(self,*args,**kwargs):
+        pass
+    def patch(self,*args,**kwargs):
+        pass
