@@ -1,0 +1,73 @@
+# -*- coding:utf-8 -*-
+import asyncio,re
+from urllib.parse import urljoin
+from asyncio import queues
+import aiohttp
+from bs4 import BeautifulSoup
+base_url = "https://www.tornadoweb.org/en/stable/"
+wait_url = []
+seen_url = set()
+
+async def get_url(session,url):
+    async with session.get(url) as response:
+        return await response.text()
+
+async def change(html,q):
+    soup = BeautifulSoup(html, features='lxml')
+    urls = [re.match(r"(http://|https://).*", a.get("href")).group() for a in soup("a", href=True) if
+            re.match(r"(http://|https://).*", a.get("href"))]
+    for url in urls:
+        print("抓取{}".format(url))
+        if url not in seen_url and url.startswith(base_url):
+            print("添加的{}".format(url))
+            await q.put(url)
+
+async def edit_html(url,q):
+    if url in seen_url:
+        return
+    async with aiohttp.ClientSession() as session:
+        html=await get_url(session,url)
+        # print(html)
+        seen_url.add(url)
+        asyncio.ensure_future(change(html,q))
+
+async def consumer(q):
+    while 1:
+        url = await q.get()
+        print("q",url)
+        if url is None:
+            return
+        if url:
+            print("url",url)
+            # asyncio.ensure_future(edit_html(url,q))
+            await edit_html(url,q)
+        q.task_done()
+
+async def main():
+    q = queues.Queue()
+    await q.put(base_url)
+
+    #第一种单个处理
+    # task = asyncio.ensure_future(consumer(q))
+    #第二种三个并发处理
+    tasks = (asyncio.ensure_future(consumer(q)) for _ in range(3))
+    feture = asyncio.gather(*tasks)
+
+    #等待所有队列完成
+    await q.join()
+    # 第一种单个处理
+    # await q.put(None)
+    # 第二种三个并发处理
+    for _ in range(3):
+        await q.put(None)
+    print("kkk")
+    # 第一种单个处理
+    # await task
+    # 第二种三个并发处理
+    await feture
+
+
+if __name__=="__main__":
+    loop = asyncio.get_event_loop()
+    asyncio.ensure_future(main())
+    loop.run_forever()
