@@ -1,0 +1,68 @@
+# -*- coding:utf-8 -*-
+
+# -*- coding:utf-8 -*-
+from tornado.web import StaticFileHandler,RedirectHandler
+
+#RedirectHandler
+# 另一个是self.redirect("",permanent=True)#true代表 301 ，false代表302
+#301,永久，302,临时重定向
+
+#StaticFileHandler
+#配置静态文件
+
+
+from tornado import web
+import tornado,time
+from tornado.options import define,options,parse_command_line
+from tornado.web import template
+
+
+class MainHandler(web.RequestHandler):
+    def initialize(self):
+        print("1")
+    def prepare(self):
+        print("2")
+    async def get(self,*args,**kwargs):
+        # print("hello")
+        # self.write("<h1>hello5 world2</h1>")
+        #第一种：
+        # self.finish("<h1>hello5{age} world2</h1>".format(age=88))
+        #第二种：
+        # word = "9999"
+        # t = template.Template("<h1>hello5{{ word }} world2</h1>")
+        # self.finish(t.generate(word=word))
+        #第三种：
+        # word="899"
+        # loader = template.Loader("D:/mmm/newtornado/tornado1/templates")
+        # self.finish(loader.load("hello.html").generate(word=word))
+        #最终版
+        word = "hello world"
+        #需要在settings中设置template全局路径
+        self.render("hello.html",word=word)
+    def on_finish(self):
+        print("3")
+
+# class PeopleHandler(web.RequestHandler):
+#     async def get(self,id,*args,**kwargs):
+#         self.write("id:{}".format(id))
+
+settings={
+    "static_path":"D:/mmm/newtornado/tornado1/static",
+    "static_url_prefix":"/static2/",#设定静态文件的前缀以什么开头，设定后必须以个开头才能访问
+    "template_path":"templates",#只需要写项目下面的templates就可以
+}
+
+
+urls = [
+    tornado.web.URLSpec("/?", MainHandler, name="index"),
+    tornado.web.URLSpec("/2/?", RedirectHandler, {"url":"/"}),
+    #如果配置了下面的StaticFileHandler,上面settings里面的两个配置就不需要了
+    # tornado.web.URLSpec("/static3/(.*)/?", StaticFileHandler, {"path":"D:/mmm/newtornado/tornado1/static"}),
+    ]
+
+if __name__=="__main__":
+    #debug=True开启热更新
+    app = web.Application(urls,**settings)
+    app.listen(8009)
+    ioloop = tornado.ioloop.IOLoop.current()
+    ioloop.start()
