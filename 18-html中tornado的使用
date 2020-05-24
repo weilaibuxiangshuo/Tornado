@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--<link rel="stylesheet" href="static/css/hello.css">-->
+    <!--用这个方式前缀变更系统会自动变动路径-->
+    <link rel="stylesheet" href="{{ static_url('css/hello.css') }}">
+    <title>Title</title>
+</head>
+<body>
+<div id="main">
+    <div id="header">
+        <h1>{{  data["name"] }}</h1>
+    </div>
+    <div id="middler">
+        <ul>
+            <!--循环-->
+            {% set total = 0 %} <!--需要先定义变量total-->
+            {% for line in data["info"] %}
+            {{ total = total + line["price"]*line["nums"] }} <!--使用变量total，计算总值 -->
+            <!--可直接用表达式进行计算总价-->
+            <!--<li>{{ line["name"] }}-&#45;&#45;{{ line["price"] }}-&#45;&#45;{{ line["nums"] }}-&#45;&#45;总价：{{ line["nums"]*line["price"] }}</li>-->
+            <!--也可以调用函数传值到后台计算好后再返回-->
+            {% if line["price"]<100 %}
+            <li>{{ line["name"] }}---{{ line["price"] }}---{{ line["nums"] }}---总价：免费</li>
+            {% else %}
+            <li>{{ line["name"] }}---{{ line["price"] }}---{{ line["nums"] }}---总价：{{ func(line["nums"],line["price"]) }}</li>
+            {% end %}
+
+            <!--字符串转义-->
+            {% raw '<a href="http://www.baidu.com">这个字符串的转义</a>' %}
+
+            <!--也可以直接引入自定义模块内的函数-->
+            <!--{% from tornado1.tools.callback import func1 %}-->
+            <!--<li>{{ line["name"] }}-&#45;&#45;{{ line["price"] }}-&#45;&#45;{{ line["nums"] }}-&#45;&#45;总价：{{ func1(line["nums"],line["price"]) }}</li>-->
+            {% end%}
+        </ul>
+        <h2>所有总价：{{total}}</h2>
+    </div>
+    <div id="footer">
+        <img src="{{ static_url('imgs/66.jpg') }}" alt="">
+    </div>
+</div>
+
+</body>
+</html>
