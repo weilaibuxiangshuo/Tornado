@@ -1,0 +1,83 @@
+server.py
+
+# -*- coding:utf-8 -*-
+import tornado,os,sys,aiomysql
+from tornado.web import Application
+from tornado import gen
+from urls import urlpatterns
+
+staticPath =  os.path.join(os.path.dirname(os.path.abspath(__file__)),"static")
+print(staticPath,"00000")
+
+settings = {
+    "static_path":staticPath,
+    "static_url_prefix":"/static/",
+    "template_path":"templates",
+    "db":{
+        "host":"localhost",
+        "port":3306,
+        "user":"root",
+        "password":"sudusudu",
+        "db":"tornado3",
+    }
+}
+
+async def poolSql(app):
+    print("有扫")
+    pool = await aiomysql.create_pool(host='localhost', port=3306,
+                                      user='root', password='sudusudu',
+                                      db='tornado3',charset="utf8")
+    app.settings["kkuu"] = pool
+    return
+
+
+if __name__=="__main__":
+    app = Application(urlpatterns,**settings)
+    app.listen(8009)
+    #tornado.gen.convert_yielded跟asyncio.ensure_future()效果一样，立即运行
+    res = tornado.gen.convert_yielded(poolSql(app))
+    print(res,type(res))
+
+    tornado.ioloop.IOLoop.current().start()
+
+
+
+
+view.py
+
+# -*- coding:utf-8 -*-
+from tornado.web import RequestHandler,Application
+import aiomysql
+
+class LoginHandler(RequestHandler):
+    async def get(self, *args, **kwargs):
+        self.render("index.html")
+
+
+class IndexHandler(RequestHandler):
+    def initialize(self, db):
+        print(db, "db",self.settings)
+        print(self.application)
+
+    async def post(self, *args, **kwargs):
+        name = self.get_body_argument("name")
+        email = self.get_body_argument("email")
+        address = self.get_body_argument("address")
+        msg = self.get_body_argument("msg")
+
+        print(name,email,address,msg,"--")
+
+        # pool = await aiomysql.create_pool(host='localhost', port=3306,
+        #                                 user='root', password='sudusudu',
+        #                                 db='tornado3', charset="utf8")
+        # print(pool,type(pool))
+        #可以不用self.settings["kkuu"]，直接用pool，self.settings["kkuu"]是全局的，pool是每次调用都要创建一次aiomysql进程池
+        async with self.settings["kkuu"].acquire() as conn:
+            async with conn.cursor() as cur:
+                try:
+                    await cur.execute("INSERT INTO info VALUES(0,'{}','{}','{}')".format(name,address,msg))
+                    await conn.commit()
+                except Exception as e:
+                    await conn.rollback()
+
+        self.finish({"code": 2000})
