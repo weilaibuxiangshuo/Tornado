@@ -1,0 +1,130 @@
+第一：主文件
+
+# -*- coding:utf-8 -*-
+from tornado.web import StaticFileHandler,RedirectHandler
+
+
+
+from tornado import web
+import tornado,time
+from tornado.options import define,options,parse_command_line
+from tornado.web import template
+
+
+class OrderModule(tornado.web.UIModule):
+    def func(self,x,y):
+        return x * y
+    def render(self,order,*args,**kwargs):
+        return self.render_string("uimodules/order-list.html",line=order,func=self.func)
+    # def embedded_css(self):
+    #     #可以直接设置样式
+    #     return "body {background-color:green}"
+    def css_files(self):
+        #可以引入样式文件
+        return ["uimodules/order-list.css"]
+
+    # def embedded_javascript(self):
+        #返回js
+    #     return ""
+    # def javascript_files(self):
+    #     pass
+
+class MainHandler(web.RequestHandler):
+    def initialize(self):
+        print("1")
+    def prepare(self):
+        print("2")
+    async def get(self,*args,**kwargs):
+
+        info = [
+            {
+                "name":"tom",
+                "age":16,
+                "price":100,
+                "nums":25,
+            },
+            {
+                "name": "boddy",
+                "age": 21,
+                "price": 50,
+                "nums": 6,
+            },
+            {
+                "name": "jack",
+                "age": 19,
+                "price": 33,
+                "nums": 2,
+            }
+        ]
+
+        context = {
+            "name":"boddy",
+            "word":"hello world",
+            "info":info,
+        }
+
+        self.render("hello2.html",data=context)
+    def on_finish(self):
+        print("3")
+
+# class PeopleHandler(web.RequestHandler):
+#     async def get(self,id,*args,**kwargs):
+#         self.write("id:{}".format(id))
+
+settings={
+    "static_path":"D:/mmm/newtornado/tornado1/static",
+    "static_url_prefix":"/static/",#设定静态文件的前缀以什么开头，设定后必须以个开头才能访问
+    "template_path":"templates",#只需要写项目下面的templates就可以
+    "ui_modules":{
+        "OrderModule":OrderModule
+    },
+}
+
+
+urls = [
+    tornado.web.URLSpec("/?", MainHandler, name="index"),
+    tornado.web.URLSpec("/2/?", RedirectHandler, {"url":"/"}),
+    #如果配置了下面的StaticFileHandler,上面settings里面的两个配置就不需要了
+    # tornado.web.URLSpec("/static3/(.*)/?", StaticFileHandler, {"path":"D:/mmm/newtornado/tornado1/static"}),
+    ]
+
+if __name__=="__main__":
+    #debug=True开启热更新
+    app = web.Application(urls,**settings)
+    app.listen(8009)
+    ioloop = tornado.ioloop.IOLoop.current()
+    ioloop.start()
+    
+    
+第二：html主文件
+    {% extends 'base.html' %}
+
+{% block boddy%}
+<div id="main">
+    <div id="header">
+        <h1>{{  data["name"] }}</h1>
+    </div>
+    <div id="middler">
+        <ul>
+            <!--循环-->
+            {% set total = 0 %} <!--需要先定义变量total-->
+            {% for line in data["info"] %}
+                {% module OrderModule(line) %}
+                {{ total = total + line["price"]*line["nums"] }}
+            {% end %}
+        </ul>
+        <h2>所有总价：{{total}}</h2>
+    </div>
+    <div id="footer">
+        <img src="{{ static_url('imgs/66.jpg') }}" alt="">
+    </div>
+</div>
+{% end %}
+
+第三：moudle的html文件 
+
+{% if line["price"]<100 %}
+<li>{{ line["name"] }}---{{ line["price"] }}---{{ line["nums"] }}---总价：免费</li>
+{% else %}
+<li>{{ line["name"] }}---{{ line["price"] }}---{{ line["nums"] }}---总价：{{ func(line["nums"],line["price"]) }}</li>
+{% end %}
