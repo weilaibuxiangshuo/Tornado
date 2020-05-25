@@ -1,0 +1,23 @@
+//base.html
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--<link rel="stylesheet" href="static/css/hello.css">-->
+    <!--用这个方式前缀变更系统会自动变动路径-->
+    <link rel="stylesheet" href="{{ static_url('css/hello.css') }}">
+    <!--私有css-->
+    {%  block custom_css %}
+    {% end %}
+    <title>Title</title>
+</head>
+<body>
+{% block boddy%}
+{% end %}
+</body>
+    <!--私有js-->
+    {%  block custom_js %}
+    {% end %}
+</html>
