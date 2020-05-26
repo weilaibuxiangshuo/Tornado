@@ -1,0 +1,71 @@
+# -*- coding:utf-8 -*-
+
+from chapter4.models.model import Goods,Supplier
+
+# 增删改查具体可以参与以下官网
+# http://docs.peewee-orm.com/en/latest/peewee/query_operators.html
+
+#注意除了get，save()跟for ...in ..会立即执行外，其它都必须调用execute()才会执行
+#增加
+# sup = Supplier()
+# sup.name = "json"
+# sup.address = "asdf京讪东街"
+# sup.phone = "56789"
+# sup.save()
+#获取一条数据
+#第一种
+# supOne = Supplier.get(Supplier.name=="tom")
+#第二种
+# supOne = Supplier.get_by_id(1)
+#第三种
+# supOne = Supplier[1]  #这里不是切片，也不是第几个数据，而是代表传入1
+# print(supOne.name)
+
+# 获取所有数据
+# goods = Goods.select()
+# for good in goods:
+#     print(good.name)
+
+# 获取指定列的所有数据
+# goods = Goods.select(Goods.price,Goods.name)
+# for good in goods:
+#     print(good.name)
+
+
+# 通过过滤获取数据
+# supOne = Supplier.filter(name="tom").execute()
+# print(supOne,type(supOne))
+# for res in supOne:
+#     print(res.name)
+
+# supOne = Supplier.select().where(Supplier.name=="tom").execute()
+# goodOne = Goods.select().where(Goods.click_num>100).execute()
+# goodOne = Goods.select().where(Goods.click_num>100|Goods.click_num<900).execute()
+# goodOne = Goods.select().where(Goods.click_num>100|Goods.click_num<900).execute()
+# goodOne = Goods.select().where(Goods.brief.contrains("飞天")).execute()
+# print(supOne,type(supOne))
+
+#排序
+#升序
+# goodOne = Goods.select().order_by(Goods.click_num.asc()).execute()
+
+#分页
+# 参数1代表从那里开始，参数2代表取几条数据
+# goodOne = Goods.select().order_by(Goods.click_num).paginate(2,10)
+# for good in goodOne:
+#     print(good.price)
+
+#更新
+# good = Goods.get_by_id(1)
+# good.click_num += 1
+# good.save()
+
+#批量更新
+# Goods.update(click_num=100).where(id>20 & id<50).execute()
+
+#删除
+# good = Goods.get_by_id(1)
+# good.delete_instance()
+
+#批量删除
+# Goods.delete(click_num=100).where(id>20 & id<50).execute()
