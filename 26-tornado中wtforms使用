@@ -5,7 +5,7 @@ pip install wtforms-tornado   #用于处理表单提交，而wtforms中没有get
 
 
 # -*- coding:utf-8 -*-
-
+forms.py
 from wtforms.fields import StringField
 from wtforms_tornado import Form
 from wtforms.validators import DataRequired,length,ValidationError,StopValidation
@@ -21,3 +21,14 @@ class SupplierForm(Form):
     def validate_address(self,field):
         print(field.data,"88")
         raise StopValidation("值错误")
+
+views.py
+class IndexHandler(RequestHandler):
+    async def post(self,*args,**kwargs):
+        print(self.request.arguments,type(self.request.arguments))
+        print(dir(self.request.arguments))
+        supplierform = SupplierForm(self.request.arguments)
+        if supplierform.validate():
+            print("验证通过 ")
+        else:
+            print("验证失败")
