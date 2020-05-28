@@ -1,0 +1,23 @@
+安装
+pip install wtforms
+pip install wtforms-tornado   #用于处理表单提交，而wtforms中没有getlist()方法 址址：https://github.com/puentesarrin/wtforms-tornado  
+
+
+
+# -*- coding:utf-8 -*-
+
+from wtforms.fields import StringField
+from wtforms_tornado import Form
+from wtforms.validators import DataRequired,length,ValidationError,StopValidation
+
+class SupplierForm(Form):
+    name = StringField("名称",validators=[DataRequired(message="请输入名称"),length(min=5,message="长度不符合")])
+    address = StringField("联系地址")
+    phone = StringField("联系方式")
+
+    # 在校验类内部函数的名字规则是固定的validate_属性名（这样wtforms才会自动识别）
+    # 这样定义的格式，无需在validators中再次添加！
+    # 这里只能有一个参数field,因为是在自己类内部，如果添加form参数会报错！
+    def validate_address(self,field):
+        print(field.data,"88")
+        raise StopValidation("值错误")
