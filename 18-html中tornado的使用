@@ -40,6 +40,20 @@
     <div id="footer">
         <img src="{{ static_url('imgs/66.jpg') }}" alt="">
     </div>
+    <div id="app">
+    <div id="header"></div>
+    <div id="main">
+        <!--reverse_url用于反向解析url中name-->
+        <form action="{{ reverse_url('index')}}" method="post" >
+            姓名:<input type="text" name="name" value="">
+            邮箱:<input type="text" name="email">
+            地址:<input type="text" name="address">
+            信息:<input type="text" name="msg">
+            <input type="submit" value="提交">
+        </form>
+    </div>
+    <div id="footer"></div>
+</div>
 </div>
 
 </body>
