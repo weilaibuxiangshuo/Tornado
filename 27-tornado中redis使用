@@ -1,0 +1,20 @@
+第一：安装redis
+pip install redis
+
+第二步：可以封装在requesthandler里面或者直接连接也是可以
+from tornado.web import RequestHandler
+
+import redis
+
+class RegisterHandler(RequestHandler):
+    def __init__(self,application,request,**kwargs):
+        super().__init__(application,request,**kwargs)
+        #self.redis_conn = redis.StrictRedis(**self.settings["redis_params"])
+        #self.redis_conn = redis.StrictRedis(host="127.0.0.1")可以直接设置在settings这边是直接写
+
+第三步：上面已经封装在里面，可以直接使用其属性
+class LoginHandler(RegisterHandler):
+    async def get(self,*args,**kwargs):
+        #print(self.application)
+        self.redis_conn.set("ceshi",1,1*60)
+        self.render('index.html')
