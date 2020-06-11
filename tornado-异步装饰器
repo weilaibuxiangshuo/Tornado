@@ -1,0 +1,40 @@
+def aaa(m):
+    # print("1")
+    def _wrapper(func):
+        # print("2")
+        class newfunc(func):
+            # print("3")
+              def __getattribute__(self, item):
+                ret = super().__getattribute__(item)
+                # print(type(ret),str(type(ret))=="<class 'method'>")
+                if item in ["get"]:
+                    async def _funcattr(*args,**kwargs):
+                        print("有进来")
+                        print(args,kwargs)
+                        res = m(ret)
+                        await gen.convert_yielded(res(self))
+                        return await ret(*args,**kwargs)
+                    update_wrapper(_funcattr, super().__getattribute__(item))
+                    return _funcattr
+                else:
+                    return ret
+        return newfunc
+    update_wrapper(_wrapper,m)
+    return _wrapper
+
+def mmm(func):
+    @wraps(func)
+    async def _mmm(self):
+        print("mm2",self.request)
+        print("mm3",self.request.headers.get("Sec-Websocket-Protocol"))
+        return func
+    return _mmm
+
+@aaa(mmm)
+class LoginHandler(RegisterHandler):
+    async def get(self,*args,**kwargs):
+        print("pppp",args,kwargs)
+        jwt = jwt_t.encode.decode("utf8")
+        print(jwt)
+        # self.redis_conn.set("ceshi",1,1*60)
+        self.render('index.html',token=jwt)
