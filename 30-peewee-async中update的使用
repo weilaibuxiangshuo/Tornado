@@ -1,0 +1,14 @@
+peewee-async中update的使用与peewee中update不相同，peewee-async只是负责刷新对象
+
+        # peewee-async中update,相当刷新对象,如果带参数only=（'title'，） 可以指定更新那个字段
+        #单个对象
+        per1 = await self.application.objects.get(Roles,id=5)
+        await self.application.objects.update(per1)
+        #多个对象
+        per1 = await self.application.objects.execute(Roles.select().where(Roles.id>5))
+        print(per1)
+        for i in per1:
+            i.title = "一起"
+        result = gen.multi([ self.application.objects.update(i) for i in per1])
+        await result
+        return self.finish({"code":2000})
