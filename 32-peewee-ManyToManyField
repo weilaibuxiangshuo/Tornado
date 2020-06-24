@@ -1,0 +1,8 @@
+注意：在tornado中使用peewee的ManyToManyField，跟django不一样
+on_delete需要设置CASCADE,在django中ManyToManyField是不需要设置的
+
+class Roles(BaseModel):
+    title = peewee.CharField(max_length=32,verbose_name="角色名")
+    permission = peewee.ManyToManyField(Permissions, backref="role_permission",on_delete="CASCADE")
+    class Meta:
+        table_name="roles"
