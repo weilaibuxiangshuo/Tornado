@@ -1,0 +1,19 @@
+tornado 中 使用model_to_dict 序列化数据，在tornado中会把序列化的对象以及相关联的外键都会序列化出来
+
+from playhouse.shortcuts import model_to_dict
+
+data = await self.application.objects.create(Permissions,title=reqData['title'],url=reqData['url'],method=reqData['method'][0],menu_id=5)
+newbb = model_to_dict(data)
+
+如果遇到时间字段datetime无法序列化，可以自定义一个函数来处理
+
+
+from datetime import datetime,date
+def json_serial(obj):
+    if isinstance(obj,(datetime,date)):
+        return obj.isoformat()
+    raise TypeError("类型错误")
+
+页面中使用json.dumps调用函数再序列化一下就可以
+data = json.dumps(newbb,default=json_serial)
+
