@@ -18,7 +18,7 @@ class Users(BaseModel):
     class Meta:
         table_name = "users"
 
-
+*注意如果更新不用此方法，那么在获取数据的时候会出现获取没有更新之前的数据，导致数据显示错乱
 多对多跟一对多在更新多对多或者一对多的数据的时候，可以直接使用元组进行赋值，例如：
 
 oneUser = await self.application.objects.get(Users, id=userinfo['id'])
