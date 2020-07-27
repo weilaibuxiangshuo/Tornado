@@ -1,0 +1,34 @@
+在peewee或者peewee-async中
+
+users的model类：
+
+class Users(BaseModel):
+    username = peewee.CharField(max_length=32,verbose_name="用户名")
+    password = peewee.CharField(max_length=255,verbose_name="密码")
+    role = peewee.ManyToManyField(Roles, backref="user_role",on_delete="CASCADE")
+
+    @classmethod
+    def new(cls,data):
+        data = tuple(data)    #data列表例如：[(Users.id>8),(Users.username=="tom")]，列表里的条件都是默认且的关系
+        if data:
+            return cls.select().where(*data)
+        else:
+            return cls.select()
+
+    class Meta:
+        table_name = "users"
+
+
+多对多跟一对多在更新多对多或者一对多的数据的时候，可以直接使用元组进行赋值，例如：
+
+oneUser = await self.application.objects.get(Users, id=userinfo['id'])
+oneUser.username = data['username']
+oneUser.password = data['password']
+其实中角色roles跟users是多对多关系,而role是users中映射的字段，现在更新用户所属角色
+oneUser.role = (1,3) #1跟3是角色的id，如果不放id，也要以放角色的实例
+
+同一样一对多也是可以如此处理
+
+还有一个是在model类中定义一个类方法可以实现把过滤跟条件放入，并且返回一个Users的modelSelect还可以继续分页
+在new类方法中,data传入是一个列表，因为where可以接收元组列表，所以，把多重条件列表转换为元组，元组里的条件都是默认且的关系
+
