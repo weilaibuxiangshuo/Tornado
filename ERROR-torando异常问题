@@ -1,0 +1,134 @@
+1.错误提示：
+peewee.OperationalError: (2006, "MySQL server has gone away (BrokenPipeError(32, 'Broken pipe'))")
+说明：
+用过ＭySQL的应该都知道，ＭySQL默认长链接只能保持8小时，超过后就会自动断开，在peewee中如何维持长连接呢？
+解决：
+重写peewee中的MySQLDatabase，数据连接，使用ReconnectMixin，让它能报OperationalError异常的时候自动重新连接
+
+from playhouse.shortcuts import ReconnectMixin
+from peewee_async import AsyncDatabase,AsyncMySQLConnection
+import pymysql,aiomysql
+
+#第一种方法重写数据库连接
+class RetryMySQLDatabase(ReconnectMixin,peewee.MySQLDatabase):
+    pass
+
+class MySQLDatabase(AsyncDatabase, RetryMySQLDatabase):
+    if pymysql:
+        Error = pymysql.Error
+
+    def init(self, database, **kwargs):
+        if not aiomysql:
+            raise Exception("Error, aiomysql is not installed!")
+        self.min_connections = 1
+        self.max_connections = 1
+        self._async_conn_cls = kwargs.pop('async_conn', AsyncMySQLConnection)
+        super().init(database, **kwargs)
+
+    @property
+    def connect_params_async(self):
+        """Connection parameters for `aiomysql.Connection`
+        """
+        kwargs = self.connect_params.copy()
+        kwargs.update({
+            'minsize': self.min_connections,
+            'maxsize': self.max_connections,
+            'autocommit': True,
+        })
+        return kwargs
+
+    async def last_insert_id_async(self, cursor):
+        """Get ID of last inserted row.
+        """
+        return cursor.lastrowid
+
+    @property
+    def use_speedups(self):
+        return False
+
+    @use_speedups.setter
+    def use_speedups(self, value):
+        pass
+        
+        
+#第二种方法重写数据库连接池连接
+from playhouse.shortcuts import ReconnectMixin
+from playhouse.pool import PooledMySQLDatabase
+from peewee_async import AsyncDatabase,AsyncMySQLConnection
+import pymysql,aiomysql
+
+class RetryMySQLDatabase(ReconnectMixin,PooledMySQLDatabase):
+    pass
+
+class MySQLDatabase(AsyncDatabase, RetryMySQLDatabase):
+    if pymysql:
+        Error = pymysql.Error
+
+    def init(self, database, **kwargs):
+        if not aiomysql:
+            raise Exception("Error, aiomysql is not installed!")
+        self.min_connections = 1
+        self.max_connections = 1
+        self._async_conn_cls = kwargs.pop('async_conn', AsyncMySQLConnection)
+        super().init(database, **kwargs)
+
+    @property
+    def connect_params_async(self):
+        """Connection parameters for `aiomysql.Connection`
+        """
+        kwargs = self.connect_params.copy()
+        kwargs.update({
+            'minsize': self.min_connections,
+            'maxsize': self.max_connections,
+            'autocommit': True,
+        })
+        return kwargs
+
+    async def last_insert_id_async(self, cursor):
+        """Get ID of last inserted row.
+        """
+        return cursor.lastrowid
+
+    @property
+    def use_speedups(self):
+        return False
+
+    @use_speedups.setter
+    def use_speedups(self, value):
+        pass
+
+
+class PooledMySQLDatabase(MySQLDatabase):
+    def init(self, database, **kwargs):
+        min_connections = kwargs.pop('min_connections', 1)
+        max_connections = kwargs.pop('max_connections', 10)
+        super().init(database, **kwargs)
+        self.min_connections = min_connections
+        self.max_connections = max_connections
+
+
+class MysqlConn(object):
+    def __init__(self):
+        print("开始")
+        self.database = MySQLDatabase(**settings["db"])
+
+    @property
+    def conn(self):
+        print("经过")
+        # with self.database.connection_context():
+        return self.database
+
+    def obj(self):
+        self.conn.set_allow_sync(False)
+        return peewee_async.Manager(self.conn)
+
+
+if __name__ == "__main__":
+    define('port', default=9002, help='run on this port', type=int)
+    tornado.options.parse_command_line()
+    app = Application(urls.urlpatterns,**settings)
+    app.listen(options.port)
+    app.objects = MysqlConn().obj()
+    gen.convert_yielded(main())
+    ioloop = IOLoop.current()
+    ioloop.start()
