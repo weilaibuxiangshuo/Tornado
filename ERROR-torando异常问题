@@ -1,5 +1,6 @@
 1.错误提示：
 peewee.OperationalError: (2006, "MySQL server has gone away (BrokenPipeError(32, 'Broken pipe'))")
+并导致：tornado连接数据库提示peewee.InterfaceError: (0, '')
 说明：
 用过ＭySQL的应该都知道，ＭySQL默认长链接只能保持8小时，超过后就会自动断开，在peewee中如何维持长连接呢？
 解决：
